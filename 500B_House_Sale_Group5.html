@@ -1,10 +1,12 @@
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 import matplotlib as mp1 
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.preprocessing import MinMaxScaler
 
-Import dataset and describe characteristics such as dimensions, data types, file types, and import methods used
+1.1. Import dataset and describe characteristics such as dimensions, data types, file types, and import methods used
 ------------------------------------import csv file in Panda Dataframe------------------------------------------------------
 Importing the data as dataframe.We are going to use pd.read_csv to import the file in dataframe.
 df =pd.read_csv(r'C:\Users\Hari\Documents\Sushma_data_science\500B\Final_Project\house_sales.csv', sep=",")
@@ -26,8 +28,40 @@ import os
 file_extension = os.path.splitext("house_sales.csv")
 print(file_extension)
 
-Clean, wrangle, and handle missing data
-------------------------------------count duplicate records in dataframe df--------------------------------------------------
+---------------------------------dataype of each columns in dataframe------------------------------------------------------
+numeric_columns = df.select_dtypes(include=['number']).columns
+nonnumeric_columns =df.select_dtypes(exclude=['number']).columns
+
+print (numeric_columns)
+print (nonnumeric_columns)
+
+------------------------------------------------------------------------------------------------------------------
+1.2.Clean, wrangle, and handle missing data.
+lets's count null values for each columns
+
+null_counts = df.isnull().sum()
+
+print(null_counts)
+
+4 fields bedrooms, bathrooms, sqft_living and sqft_lot contain null values. Now , lets replace the null values with the mean 
+value of each fields as we already know the 4 fields that are missing values are numeric types.
+
+df.fillna(df.mean(numeric_only=True).round(1), inplace=True)
+
+Now, lets verify there are no more null values in those 4 fields.
+
+null_counts2 = df.isnull().sum()
+print(null_counts2)
+----------------------------------------------------------------------------------------------------------------------
+1.3. Transform data appropriately using techniques such as aggregation, normalization, and feature construction
+
+#Normalize columns 
+scaler = MinMaxScaler() ##Not sure if its going to useful or not we can remove if we find this not adding any values
+df['normalized_sqft_living'] = scaler.fit_transform(df[['sqft_living']])
+
+---------------------------------------------------------------------------------------------------------------------
+1.4. Reduce redundant data and perform need-based discretization.
+-----------Remove the duplicate records for each primarykey/id from dataframe df--------------------------------
 
 # Check duplicates based on the 'id' column.
 duplicates = df.duplicated(subset=['id'], keep=False)
@@ -37,58 +71,16 @@ duplicate_rows = df[duplicates]
 
 print(duplicate_rows)
 
-------------------------------------assign data of dataframe df to df1------------------------------------------------------
-df1 = df ## creating new dataframe df2 by passing same rows and column from df1
+-----------------------------------------------
+df = df.drop_duplicates(subset=['id'], keep='last') ## we decided to keep last from each dupe id
 
--------------------------------------count duplicate records in dataframe df1-------------------------------------------------
-# Check duplicates based on the 'id' column.
-duplicates_df1 = df1.duplicated(subset=['id'], keep=False)
-
-# identyfying dataframe duplicate_rows from the df to get the duplicate rows
-duplicate_rows_df1 = df1[duplicates]
-
-print(duplicate_rows_df1)
-
-------------------------------------remove duplicates from dataframe df1------------------------------------------------------
-Remove the duplicate records for each primarykey/id from dataframe df1
-
-df1 = df1.drop_duplicates(subset=['id'], keep='last') ## we decided to keep last from each dupe id
-
-------------------------------------count of duplicate records in dataframe df1-----------------------------------------------------
+-------------------------------------------------
+Now , leteverify theer are no more duplicates in dataframe.
 
 # Check duplicates based on the 'id' column.
-duplicates = df1.duplicated(subset=['id'], keep=False)
+duplicates = df.duplicated(subset=['id'], keep=False)
 
 # identyfying dataframe duplicate_rows from the df to get the duplicate rows
-duplicate_rows = df1[duplicates]
+duplicate_rows = df[duplicates]
 
 print(duplicate_rows)
-
-------------------------------------------------------------------------------------------------------------------------------------
-Dataframe df1 has no more duplicates. Lets see how many null values are there in each columns.
-------------------------------------------------------------------------------------------------------------------------------------
-
-null_counts = df1.isnull().sum()
-print(null_counts)
-
--------------------------------------------------------------------------------------------------------------------------------------
-4 fields bedrooms, bathrooms, sqft_living and sqft_lot contain null values. Now , lets replace the null values with the mean value of each fields. 
-Before doinf that lest identify the datatypes of each column.
-
--------------------------------------------Replace null values with mean value of each fields---------------------------------------------
-All that columns that have null values are numeric type so we will replace null values with mean value of each fields.
-
-#df1.fillna(df1.mean(numeric_only=True).round(1), inplace=True) ## replacing null values mean
-df1.fillna(df1.mean(numeric_only=True).round(1), inplace=True)
-
---------------------------------------------------------------------------------------------------------------
-null_counts2 = df1.isnull().sum()
-print(null_counts2)
-
-
-
----Transform data appropriately using techniques such as aggregation, normalization, and feature construction----------------------------
-
-#Normalize columns 
-scaler = MinMaxScaler() ##Not sure if its going to useful or not we can remove if we find this not adding any values
-df1['normalized_sqft_living'] = scaler.fit_transform(df1[['sqft_living']])
