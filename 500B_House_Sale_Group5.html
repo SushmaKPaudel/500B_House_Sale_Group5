@@ -4,6 +4,7 @@ import matplotlib as mp1
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+Import dataset and describe characteristics such as dimensions, data types, file types, and import methods used
 ------------------------------------import csv file in Panda Dataframe------------------------------------------------------
 Importing the data as dataframe.We are going to use pd.read_csv to import the file in dataframe.
 df =pd.read_csv(r'C:\Users\Hari\Documents\Sushma_data_science\500B\Final_Project\house_sales.csv', sep=",")
@@ -25,6 +26,7 @@ import os
 file_extension = os.path.splitext("house_sales.csv")
 print(file_extension)
 
+Clean, wrangle, and handle missing data
 ------------------------------------count duplicate records in dataframe df--------------------------------------------------
 
 # Check duplicates based on the 'id' column.
@@ -70,19 +72,23 @@ null_counts = df1.isnull().sum()
 print(null_counts)
 
 -------------------------------------------------------------------------------------------------------------------------------------
-4 fields bedrooms, bathrooms, sqft_living and sqft_lot contain null values. Now , lets replace the null values with the mean value of each fields.
-
-------------------------------------assign data of dataframe df1 to df2-----------------------------------------------------------
-df2 = df1 ## creating new dataframe df2 by passing same rows and column from df1
-
--------------------------------------------count null values in dataframe df2----------------------------------------------------
-null_counts2 = df2.isnull().sum() 
-print(null_counts2)
+4 fields bedrooms, bathrooms, sqft_living and sqft_lot contain null values. Now , lets replace the null values with the mean value of each fields. 
+Before doinf that lest identify the datatypes of each column.
 
 -------------------------------------------Replace null values with mean value of each fields---------------------------------------------
-df2.fillna(df2.mean(numeric_only=True).round(1), inplace=True)## replacing null values mean
+All that columns that have null values are numeric type so we will replace null values with mean value of each fields.
 
-----------------------------------count null values in dataframe df2 after replacement of null values------------------------------------
-null_counts2 = df2.isnull().sum()
+#df1.fillna(df1.mean(numeric_only=True).round(1), inplace=True) ## replacing null values mean
+df1.fillna(df1.mean(numeric_only=True).round(1), inplace=True)
+
+--------------------------------------------------------------------------------------------------------------
+null_counts2 = df1.isnull().sum()
 print(null_counts2)
---------------------------------------------
+
+
+
+---Transform data appropriately using techniques such as aggregation, normalization, and feature construction----------------------------
+
+#Normalize columns 
+scaler = MinMaxScaler() ##Not sure if its going to useful or not we can remove if we find this not adding any values
+df1['normalized_sqft_living'] = scaler.fit_transform(df1[['sqft_living']])
