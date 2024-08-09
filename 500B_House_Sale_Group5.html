@@ -88,3 +88,83 @@ print(duplicate_rows)
 
 -----------------------------------------------
 data =pd.read_csv(r'C:\Users\Hari\Documents\Sushma_data_science\500B\Module6\airline_costs.csv', sep=",")
+
+
+
+
+
+
+
+
+
+-------            NIYAT          ------------
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------------
+
+*BASED OFF DF ALREADY BEING CLEANED AND IND/DEP VARIABLES BEING DETERIMED
+
+
+
+3. Creating a regression model
+----------------------------fit the model--------------------------------------------------------
+Find the best-fitting line through the data points
+
+model = sm.ols('price ~ sqft_living', data = df).fit()
+
+----------------------------print the summary statistics--------------------------
+Show a comprehensive summary of the regression model  to understand the relationship between the independent and dependent 
+variable 
+
+print(model.summary())
+
+----------------------------calculate predictions--------------------------
+Generate predictions based on the fitted model and calculates the predicted value of price based 'sqft_living' using the
+regression model
+
+predictions = model.predict(df[['sqft_living']])
+
+----------------------------calculate evaluation metrics----------------------------------
+Asses accuracy of model's predictions using evaluation metrics
+
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+mae = mean_absolute_error(df['price'], predictions)
+mse = mean_squared_error(df['price'], predictions)
+r2 = r2_score(df['price'], predictions)
+
+print(f"Mean Absolute Error (MAE): {mae}")
+print(f"Mean Squared Error (MSE): {mse}")
+print(f"R² Score: {r2}")
+
+------------------------------create scatter plot------------------------------------------------------------------------
+
+plt.figure(figsize=(10, 6))
+plt.scatter(df['price'],predictions)
+plt.plot([df['price'].min(), df['price'].max()], [df['price'].min(), df['price'].max()], color='red', linestyle='--')
+plt.title('Actual vs. Predicted House Prices Based on Living Area (sqft)')
+plt.xlabel('Actual Price')
+plt.ylabel('predicted price')
+plt.show
+
+-----------------------------(optional) make x and y axis show full numbers instead of scientific notation------------------
+
+import matplotlib.ticker as ticker
+
+formatter = ticker.ScalarFormatter(useOffset=False)
+formatter.set_scientific(False)
+
+plt.gca().xaxis.set_major_formatter(formatter)
+plt.gca().yaxis.set_major_formatter(formatter)
+
+plt.show()
+
+
+
