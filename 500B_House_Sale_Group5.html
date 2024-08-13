@@ -334,6 +334,19 @@ predictions1 = model1.predict(df[['bathrooms']])
 
 predictions2 = model2.predict(df[['sqft_above']])
 
+----------We did 1:1 analysis with indepedent and dependent varaible now lets do  analysis with combined cofounding variables to see the effect in price------------
+
+model = sm.ols('price ~ bedrooms + bathrooms+ sqft_living + sqft_lot +floors + waterfront', data = df).fit()
+print(model.summary())  
+
+---------------- Since r-sqaure value is not looking good so we are changing the varaibles again----------------
+model = sm.ols('price ~ bedrooms + bathrooms+ sqft_living + view + condition + sqft_lot + waterfront +grade + yr_built  ', data = df).fit()
+print(model.summary())
+
+----combined variable is giving better r-square values. so, good model for price would be considering bedrooms,bathrooms,sqft_living,view,condition,sqft_lot,waterfront,grade and yr_built 
+
+
+    
 ----------------------------calculate evaluation metrics----------------------------------
 Asses accuracy of model's predictions using evaluation metrics
 
