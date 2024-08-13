@@ -114,7 +114,7 @@ numerical_summary
 
 -----------------visualizing the distribution of all variables--------------
 
-#first histogram
+#first histogram to observe the variables disribution
 df[numerical_vars].hist(bins=20, figsize=(20, 15))
 plt.show()
 
@@ -126,6 +126,102 @@ for i, var in enumerate(numerical_vars):
 plt.tight_layout()
 plt.show()
 
+----------Checking for outliers using IQR -------------
+
+# Calculate the IQR
+Q1 = df[numerical_vars].quantile(0.25)
+Q3 = df[numerical_vars].quantile(0.75)
+IQR = Q3 - Q1
+
+# Identify outliers
+outliers_iqr = (df[numerical_vars] < (Q1 - 1.5 * IQR)) | (df[numerical_vars] > (Q3 + 1.5 * IQR))
+
+# Verify how many outliers are there
+outlier_counts = outliers_iqr.sum()
+print("Number of outliers per column:")
+print(outlier_counts)
+_________________calculating medians for columns of interest -------
+     # Calculate medians for columns of interest
+modes = df[columns_of_interest].mode()
+
+# Replace outliers with median for specific columns
+df_replaced = df.copy()
+for col in columns_of_interest:
+    if col in outliers_iqr.columns:
+        df_replaced.loc[outliers_iqr[col], col] = modes[col]
+
+--------------re-calculating IQR for the updated dataframe----
+
+Q1_updated = df_replaced[numerical_vars].quantile(0.25)
+Q3_updated = df_replaced[numerical_vars].quantile(0.75)
+IQR_updated = Q3_updated - Q1_updated
+
+# Identify remaining outliers in the updated DataFrame
+outliers_iqr_updated = (df_replaced[numerical_vars] < (Q1_updated - 1.5 * IQR_updated)) | (df_replaced[numerical_vars] > (Q3_updated + 1.5 * IQR_updated))
+
+# Verify how many outliers are still there
+remaining_outlier_counts = outliers_iqr_updated.sum()
+print("Number of remaining outliers per column:")
+print(remaining_outlier_counts
+
+------------capping outliers-----------
+
+# Cap the outliers
+df_capped = df_replaced.copy()
+for col in columns_of_interest:
+    if col in outliers_iqr.columns:
+        lower_bound = Q1[col] - 1.5 * IQR[col]
+        upper_bound = Q3[col] + 1.5 * IQR[col]
+        df_capped[col] = df_capped[col].clip(lower=lower_bound, upper=upper_bound)
+
+# Check for remaining outliers after capping
+Q1_capped = df_capped[numerical_vars].quantile(0.25)
+Q3_capped = df_capped[numerical_vars].quantile(0.75)
+IQR_capped = Q3_capped - Q1_capped
+
+outliers_iqr_capped = (df_capped[numerical_vars] < (Q1_capped - 1.5 * IQR_capped)) | (df_capped[numerical_vars] > (Q3_capped + 1.5 * IQR_capped))
+remaining_outlier_counts_capped = outliers_iqr_capped.sum()
+
+print("Number of remaining outliers after capping per column:")
+print(remaining_outlier_counts_capped)
+
+-------------still getting outliers, therefore applying logtransformation---------
+
+    df_log_transformed = df_replaced.copy()
+for col in columns_of_interest:
+    df_log_transformed[col] = np.log1p(df_log_transformed[col])
+
+# Check for outliers after log transformation
+Q1_log = df_log_transformed[numerical_vars].quantile(0.25)
+Q3_log = df_log_transformed[numerical_vars].quantile(0.75)
+IQR_log = Q3_log - Q1_log
+
+outliers_iqr_log = (df_log_transformed[numerical_vars] < (Q1_log - 1.5 * IQR_log)) | (df_log_transformed[numerical_vars] > (Q3_log + 1.5 * IQR_log))
+remaining_outlier_counts_log = outliers_iqr_log.sum()
+
+print("Number of remaining outliers after log transformation per column:")
+print(remaining_outlier_counts_log)
+
+    -------Cap the remaining outliers after log transformation-------
+
+    df_capped_log = df_log_transformed.copy()
+for col in columns_of_interest:
+    if col in outliers_iqr_log.columns:
+        lower_bound = Q1_log[col] - 1.5 * IQR_log[col]
+        upper_bound = Q3_log[col] + 1.5 * IQR_log[col]
+        df_capped_log[col] = df_capped_log[col].clip(lower=lower_bound, upper=upper_bound)
+
+# Check if any outliers remain after capping
+Q1_capped_log = df_capped_log[numerical_vars].quantile(0.25)
+Q3_capped_log = df_capped_log[numerical_vars].quantile(0.75)
+IQR_capped_log = Q3_capped_log - Q1_capped_log
+
+outliers_iqr_capped_log = (df_capped_log[numerical_vars] < (Q1_capped_log - 1.5 * IQR_capped_log)) | (df_capped_log[numerical_vars] > (Q3_capped_log + 1.5 * IQR_capped_log))
+remaining_outlier_counts_capped_log = outliers_iqr_capped_log.sum()
+
+print("Number of remaining outliers after capping post-log transformation per column:")
+print(remaining_outlier_counts_capped_log)
+----------------------------  correlation --------------------------
 2.3 Diagnose for correlations between variables and determine independent and dependent variables
 
 correlation_matrix = df[numerical_vars].corr()
@@ -146,59 +242,64 @@ print(correlation_with_price)
 strong_correlations = correlation_with_price[abs(correlation_with_price) > 0.5]
 print(strong_correlations)
 
+----------------defining independent variables--------
+
+    # Define our independent variables
+X = df_final[['sqft_living', 'grade', 'sqft_above', 'sqft_living15', 'bathrooms']]
+
+# Add a constant (intercept) to the model
+X = add_constant(X)
+
+# Check for and handle NaN and inf values
+X_cleaned = X.replace([np.inf, -np.inf], np.nan).fillna(X.median())
+
+# Calculate VIF for each feature
+vif_data = pd.DataFrame()
+vif_data['Feature'] = X_cleaned.columns
+vif_data['VIF'] = [variance_inflation_factor(X_cleaned.values, i) for i in range(X_cleaned.shape[1])]
+
+print(vif_data)
 
 2.4 Perform exploratory analysis in combination with visualization techniques to discover patterns and features of interest
 ---------------------checking for multicollinearity using scatter plot----------
  
-
-  for col1 in numerical_vars:
-    for col2 in numerical_vars:
+    selected_columns = X_cleaned.columns
+for col1 in selected_columns:
+    for col2 in selected_columns:
         if col1 != col2:
             plt.figure(figsize=(8, 6))
-            sns.scatterplot(x=df[col1], y=df[col2])
+            sns.scatterplot(x=X_cleaned[col1], y=X_cleaned[col2])
             plt.title(f'{col1} vs {col2}')
+            plt.xlabel(col1)
+            plt.ylabel(col2)
             plt.show()
 
--------------------calculating for R-squared-------------------------
-  y = df['price']
+-------------Combining variables ----------
+#since there are alot of correlations lets, combine and take average of sqft_living and sqft_living15, since they measure the same concept 
+correlation = X_cleaned[['sqft_living', 'sqft_living15']].corr().iloc[0, 1]
+print(f"Correlation between sqft_living and sqft_living15: {correlation}")
 
-variables = ['sqft_living', 'sqft_above', 'sqft_living15', 'bathrooms', 'sqft_basement', 
-             'bedrooms', 'lat', 'floors', 'yr_renovated', 'sqft_lot', 
-             'sqft_lot15', 'yr_built', 'condition', 'long']
-  for var in variables:
-    X = df[[var]]
-    X = sm.add_constant(X)  # Adds a constant (intercept) term to the model
-    model = sm.OLS(y, X).fit()
-    r_squared = model.rsquared
-    r_squared_values[var] = r_squared
+--------------------combine and drop variables -------------
 
-  r_squared_df = pd.DataFrame(list(r_squared_values.items()), columns=['Variable', 'R-squared'])
+print(X_cleaned.columns)
 
-  r_squared_df['R-squared'] = r_squared_df['R-squared'].round(2)
-  print(r_squared_df)
+X_cleaned['mean_sqft'] = X_cleaned[['sqft_living', 'sqft_living15']].mean(axis=1)
 
-  # now that we can see our interest variables based on correlation and R-squared value, 
-  # lets do multicollinearity check on our variables of interest
+X_cleaned = X_cleaned.drop(['sqft_living', 'sqft_living15'], axis=1)
 
-  -----------------Multicollinearity check------------
-  
-  X = df [['sqft_living', 'sqft_above', 'sqft_living15', 'bathrooms']].dropna()
-X = sm.add_constant(X)
+print(X_cleaned.head())
+
+------------------check the new vif---------------
+X_with_const = add_constant(X_cleaned)
 
 vif_data = pd.DataFrame()
-vif_data["feature"] = X.columns
-vif_data["VIF"] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
+vif_data['Feature'] = X_with_const.columns
+vif_data['VIF'] = [variance_inflation_factor(X_with_const.values, i) for i in range(X_with_const.shape[1])]
 
 print(vif_data)
-
-
-#having VIF values lower than 5, we are safe from multicollinearity
-  and our independent variables are "         feature        VIF
-0          const  10.430581
-1    sqft_living   4.630557
-2     sqft_above   4.070416
-3  sqft_living15   2.398817
-4      bathrooms   2.102460"
+    
+# then we have choosen our predictors----------
+X_predictors = ['mean_sqft', 'grade', 'sqft_above',  'bathrooms']
 
 
 -----------------------------------------------------------------------------------------------------------
